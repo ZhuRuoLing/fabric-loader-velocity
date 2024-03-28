@@ -18,6 +18,7 @@ package net.fabricmc.loader.impl.game;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +31,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -55,6 +57,7 @@ public final class LibClassifier<L extends Enum<L> & LibraryType> {
 	private final Map<L, String> localPaths;
 	private final Set<Path> systemLibraries = new HashSet<>();
 	private final List<Path> unmatchedOrigins = new ArrayList<>();
+	private final String systemLibraryExclusion = System.getProperty("fabric.systemLibraryExclusion");
 
 	public LibClassifier(Class<L> cls, EnvType env, GameProvider gameProvider) throws IOException {
 		L[] libs = cls.getEnumConstants();
@@ -183,7 +186,12 @@ public final class LibClassifier<L extends Enum<L> & LibraryType> {
 
 	private void process(Path path, Set<L> excludedLibs) throws IOException {
 		path = LoaderUtil.normalizeExistingPath(path);
-		if (systemLibraries.contains(path)) return;
+		if (systemLibraryExclusion != null) {
+			boolean excluded = path.toString().toLowerCase(Locale.ROOT).contains(systemLibraryExclusion);
+			if (systemLibraries.contains(path) && excluded) return;
+		}else {
+			if (systemLibraries.contains(path)) return;
+		}
 
 		boolean matched = false;
 

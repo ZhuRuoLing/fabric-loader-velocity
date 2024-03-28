@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "velocity-test",
+  "name": "Fabric Test Mod",
+  "version": "1.0.0",
+  "mixins": [
+    "falocity.test.mixins.json"
+  ],
+  "entrypoints": {
+    "main": [
+      "icu.takeneko.falocity.ModMain"
+    ]
+  }
+}

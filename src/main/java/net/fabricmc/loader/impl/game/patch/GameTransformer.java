@@ -40,7 +40,7 @@ import net.fabricmc.loader.impl.util.log.LogCategory;
 
 public class GameTransformer {
 	private final List<GamePatch> patches;
-	private Map<String, byte[]> patchedClasses;
+	private Map<String, byte[]> patchedClasses = new HashMap<>();
 	private boolean entrypointsLocated = false;
 
 	public GameTransformer(GamePatch... patches) {

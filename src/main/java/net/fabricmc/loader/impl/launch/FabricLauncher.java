@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.jar.Manifest;
 
 import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.impl.launch.knot.KnotClassLoaderInterface;
 
 public interface FabricLauncher {
 	MappingConfiguration getMappingConfiguration();
@@ -62,4 +63,8 @@ public interface FabricLauncher {
 	String getTargetNamespace();
 
 	List<Path> getClassPath();
+
+ 	default KnotClassLoaderInterface getKnotClassLoaderDelegate(){
+		return null;
+	}
 }

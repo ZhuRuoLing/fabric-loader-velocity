@@ -347,4 +347,9 @@ public final class Knot extends FabricLauncherBase {
 			LoaderUtil.verifyClasspath();
 		}
 	}
+
+	@Override
+	public KnotClassLoaderInterface getKnotClassLoaderDelegate() {
+		return this.classLoader;
+	}
 }

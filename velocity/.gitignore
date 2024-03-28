@@ -1,0 +1,9 @@
+# Ignore everything
+/*
+
+!/src
+!/build.gradle
+!/.gitignore
+!/libs
+!/velocity-test
+run

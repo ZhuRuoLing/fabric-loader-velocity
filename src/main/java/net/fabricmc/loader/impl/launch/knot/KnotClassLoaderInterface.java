@@ -24,7 +24,7 @@ import java.util.jar.Manifest;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.impl.game.GameProvider;
 
-interface KnotClassLoaderInterface {
+public interface KnotClassLoaderInterface {
 	@SuppressWarnings("resource")
 	static KnotClassLoaderInterface create(boolean useCompatibility, boolean isDevelopment, EnvType envType, GameProvider provider) {
 		if (useCompatibility) {

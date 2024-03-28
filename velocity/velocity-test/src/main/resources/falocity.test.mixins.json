@@ -1,0 +1,11 @@
+{
+    "required": true,
+    "package": "icu.takeneko.falocity.mixin",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": [
+      "HelloMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}
