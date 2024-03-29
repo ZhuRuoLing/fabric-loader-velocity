@@ -533,6 +533,7 @@ final class KnotClassDelegate<T extends ClassLoader & ClassLoaderAccess> impleme
 		URL findResourceFwd(String name);
 
 		Package getPackageFwd(String name);
+
 		Package definePackageFwd(String name, String specTitle, String specVersion, String specVendor, String implTitle, String implVersion, String implVendor, URL sealBase) throws IllegalArgumentException;
 
 		Object getClassLoadingLockFwd(String name);

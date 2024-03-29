@@ -37,4 +37,10 @@ public class Hooks {
 		loader.invokeEntrypoints("main", ModInitializer.class, ModInitializer::onInitialize);
 		loader.invokeEntrypoints("server", DedicatedServerModInitializer.class, DedicatedServerModInitializer::onInitializeServer);
 	}
+	
+	public static String versionOverride(String originalVersion){
+		String overriddenVersion = System.getProperty("fabric.velocityVersionOverride");
+		if (overriddenVersion != null)return overriddenVersion;
+		return originalVersion;
+	}
 }

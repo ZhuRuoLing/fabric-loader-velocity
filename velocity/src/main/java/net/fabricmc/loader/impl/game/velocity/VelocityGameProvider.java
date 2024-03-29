@@ -42,7 +42,7 @@ import net.fabricmc.loader.impl.FormattedException;
 import net.fabricmc.loader.impl.game.GameProvider;
 import net.fabricmc.loader.impl.game.LibClassifier;
 import net.fabricmc.loader.impl.game.patch.GameTransformer;
-import net.fabricmc.loader.impl.game.velocity.patch.EntrypointPatch;
+import net.fabricmc.loader.impl.game.velocity.patch.VelocityServerPatch;
 import net.fabricmc.loader.impl.game.velocity.patch.TerminalConsoleAppenderPatch;
 import net.fabricmc.loader.impl.launch.FabricLauncher;
 import net.fabricmc.loader.impl.metadata.BuiltinModMetadata;
@@ -78,7 +78,7 @@ public class VelocityGameProvider implements GameProvider {
 	private boolean slf4jAvailable;
 	private String entrypoint;
 	private Arguments arguments;
-	private final GameTransformer transformer = new GameTransformer(new EntrypointPatch(), new TerminalConsoleAppenderPatch());
+	private final GameTransformer transformer = new GameTransformer(new VelocityServerPatch(), new TerminalConsoleAppenderPatch());
 
 	@Override
 	public String getGameId() {
@@ -191,7 +191,7 @@ public class VelocityGameProvider implements GameProvider {
 			implVendor = "Velocity Contributors";
 		}
 		implVersion = implVersion.substring(0,implVersion.indexOf('-'));
-		proxyVersion = new ProxyVersion(implName, implVendor, implVersion);
+		proxyVersion = new ProxyVersion(implName, implVendor, Hooks.versionOverride(implVersion));
 	}
 
 	@Override

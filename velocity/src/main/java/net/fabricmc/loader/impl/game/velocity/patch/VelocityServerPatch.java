@@ -32,7 +32,7 @@ import net.fabricmc.loader.impl.game.patch.GamePatch;
 import net.fabricmc.loader.impl.game.velocity.Hooks;
 import net.fabricmc.loader.impl.launch.FabricLauncher;
 
-public class EntrypointPatch extends GamePatch {
+public class VelocityServerPatch extends GamePatch {
 	@Override
 	public void process(FabricLauncher launcher, Function<String, ClassNode> classSource, Consumer<ClassNode> classEmitter) {
 		ClassNode node = classSource.apply("com.velocitypowered.proxy.VelocityServer");
@@ -54,9 +54,31 @@ public class EntrypointPatch extends GamePatch {
 					));
 					patched = true;
 				}
+				if (methodNode.name.equals("getVersion")) { // there are only one method named getVersion
+					var it = methodNode.instructions.iterator();
+					while (it.hasNext()) {
+						var insn = it.next();
+						if (insn instanceof MethodInsnNode methodInsnNode) {
+							//INVOKESPECIAL com/velocitypowered/api/util/ProxyVersion.<init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+							if (methodInsnNode.name.equals("<init>")
+									&& methodInsnNode.owner.equals("com/velocitypowered/api/util/ProxyVersion")
+									&& methodInsnNode.desc.equals("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V")
+							) {
+								it.previous();
+								it.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
+										Hooks.INTERNAL_NAME,
+										"versionOverride",
+										"(Ljava/lang/String;)Ljava/lang/String;"
+								));
+								patched = true;
+								break;
+							}
+						}
+					}
+				}
 			}
 		}
-		if (patched){
+		if (patched) {
 			classEmitter.accept(node);
 		}
 	}
