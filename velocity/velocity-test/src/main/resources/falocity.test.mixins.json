@@ -5,6 +5,7 @@
     "mixins": [
       "HelloMixin"
     ],
+    "plugin": "icu.takeneko.falocity.mixin.TestMixinConfigPlugin",
     "injectors": {
         "defaultRequire": 1
     }

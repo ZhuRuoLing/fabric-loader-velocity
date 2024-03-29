@@ -27,6 +27,5 @@ public class ModMain implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		logger.info("Hello World!");
-		throw new RuntimeException();
 	}
 }

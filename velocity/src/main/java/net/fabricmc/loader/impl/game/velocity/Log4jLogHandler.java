@@ -18,13 +18,20 @@ package net.fabricmc.loader.impl.game.velocity;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.StringBufferInputStream;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
 import java.util.jar.Attributes.Name;
 import java.util.jar.Manifest;
+
+import net.fabricmc.loader.impl.util.ExceptionUtil;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -48,8 +55,21 @@ public final class Log4jLogHandler implements LogHandler {
 	@Override
 	public void log(long time, LogLevel level, LogCategory category, String msg, Throwable exc, boolean fromReplay, boolean wasSuppressed) {
 		// TODO: suppress console log output if wasSuppressed is false to avoid duplicate output
-		getLogger(category).log(translateLogLevel(level), msg, exc);
+		// Velocity's logger ignoreException by default
+		if (exc != null) {
+			getLogger(category).log(translateLogLevel(level), String.format("%s\n%s", msg, stacktraceToString(exc)));
+		} else {
+			getLogger(category).log(translateLogLevel(level), msg);
+		}
 	}
+
+	private static String stacktraceToString(Throwable tr) {
+		var os = new ByteArrayOutputStream();
+		var ps = new PrintStream(os);
+		tr.printStackTrace(ps);
+		return os.toString(StandardCharsets.UTF_8);
+	}
+
 
 	private static Logger getLogger(LogCategory category) {
 		Logger ret = (Logger) category.data;
@@ -69,11 +89,12 @@ public final class Log4jLogHandler implements LogHandler {
 		if (level == LogLevel.DEBUG) return Level.DEBUG;
 		if (level == LogLevel.TRACE) return Level.TRACE;
 
-		throw new IllegalArgumentException("unknown log level: "+level);
+		throw new IllegalArgumentException("unknown log level: " + level);
 	}
 
 	@Override
-	public void close() { }
+	public void close() {
+	}
 
 	static {
 		if (needsLookupRemoval()) {
@@ -133,7 +154,8 @@ public final class Log4jLogHandler implements LogHandler {
 
 		try {
 			LoggerContext context = LogManager.getContext(false);
-			if (context.getClass().getName().equals("org.apache.logging.log4j.simple.SimpleLoggerContext")) return; // -> no log4j core
+			if (context.getClass().getName().equals("org.apache.logging.log4j.simple.SimpleLoggerContext"))
+				return; // -> no log4j core
 
 			Object config = context.getClass().getMethod("getConfiguration").invoke(context);
 			Object substitutor = config.getClass().getMethod("getStrSubstitutor").invoke(config);

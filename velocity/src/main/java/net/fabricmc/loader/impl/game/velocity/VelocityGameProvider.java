@@ -1,25 +1,20 @@
+/*
+ * Copyright 2016 FabricMC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.fabricmc.loader.impl.game.velocity;
-
-import com.google.common.base.MoreObjects;
-import com.velocitypowered.api.util.ProxyVersion;
-
-import com.velocitypowered.proxy.VelocityServer;
-
-import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.api.VersionParsingException;
-import net.fabricmc.loader.api.metadata.ModDependency;
-import net.fabricmc.loader.impl.FormattedException;
-import net.fabricmc.loader.impl.game.GameProvider;
-import net.fabricmc.loader.impl.game.LibClassifier;
-import net.fabricmc.loader.impl.game.patch.GameTransformer;
-import net.fabricmc.loader.impl.launch.FabricLauncher;
-import net.fabricmc.loader.impl.metadata.BuiltinModMetadata;
-import net.fabricmc.loader.impl.metadata.ModDependencyImpl;
-import net.fabricmc.loader.impl.util.Arguments;
-import net.fabricmc.loader.impl.util.ExceptionUtil;
-import net.fabricmc.loader.impl.util.SystemProperties;
-import net.fabricmc.loader.impl.util.log.Log;
-import net.fabricmc.loader.impl.util.log.LogHandler;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
@@ -34,11 +29,33 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.PrimitiveIterator;
 import java.util.Set;
+
+import com.google.common.base.MoreObjects;
+import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.proxy.VelocityServer;
+
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.VersionParsingException;
+import net.fabricmc.loader.api.metadata.ModDependency;
+import net.fabricmc.loader.impl.FormattedException;
+import net.fabricmc.loader.impl.game.GameProvider;
+import net.fabricmc.loader.impl.game.LibClassifier;
+import net.fabricmc.loader.impl.game.patch.GameTransformer;
+import net.fabricmc.loader.impl.game.velocity.patch.EntrypointPatch;
+import net.fabricmc.loader.impl.game.velocity.patch.TerminalConsoleAppenderPatch;
+import net.fabricmc.loader.impl.launch.FabricLauncher;
+import net.fabricmc.loader.impl.metadata.BuiltinModMetadata;
+import net.fabricmc.loader.impl.metadata.ModDependencyImpl;
+import net.fabricmc.loader.impl.util.Arguments;
+import net.fabricmc.loader.impl.util.ExceptionUtil;
+import net.fabricmc.loader.impl.util.SystemProperties;
+import net.fabricmc.loader.impl.util.log.Log;
+import net.fabricmc.loader.impl.util.log.LogHandler;
 
 public class VelocityGameProvider implements GameProvider {
 
+	//
 	private static final String[] ALLOWED_EARLY_CLASS_PREFIXES = {
 			"org.apache.logging.log4j.",
 			"com.velocitypowered.",
@@ -61,7 +78,7 @@ public class VelocityGameProvider implements GameProvider {
 	private boolean slf4jAvailable;
 	private String entrypoint;
 	private Arguments arguments;
-	private final GameTransformer transformer = new GameTransformer();
+	private final GameTransformer transformer = new GameTransformer(new EntrypointPatch(), new TerminalConsoleAppenderPatch());
 
 	@Override
 	public String getGameId() {
@@ -179,6 +196,9 @@ public class VelocityGameProvider implements GameProvider {
 
 	@Override
 	public void initialize(FabricLauncher launcher) {
+		// some weird workarounds
+		System.setProperty("fabric.debug.disableClassPathIsolation","");
+
 		launcher.setValidParentClassPath(validParentClassPath);
 		if (!logJars.isEmpty() && !Boolean.getBoolean(SystemProperties.UNIT_TEST)) {
 			for (Path jar : logJars) {
@@ -191,6 +211,7 @@ public class VelocityGameProvider implements GameProvider {
 		}
 
 		setupLogHandler(launcher, true);
+		transformer.locateEntrypoints(launcher, gameJars);
 	}
 
 	private void setupLogHandler(FabricLauncher launcher, boolean useTargetCl) {
@@ -231,18 +252,16 @@ public class VelocityGameProvider implements GameProvider {
 
 	@Override
 	public void unlockClassPath(FabricLauncher launcher) {
-
 		for (Path gameJar : gameJars) {
-
 			launcher.getKnotClassLoaderDelegate().setAllowedPrefixes(gameJar);
 			launcher.addToClassPath(gameJar);
 		}
-
-		for (Path lib : miscGameLibraries) {
-			launcher.addToClassPath(lib);
-			launcher.getKnotClassLoaderDelegate().addCodeSource(lib);
-			launcher.getKnotClassLoaderDelegate().setAllowedPrefixes(lib, new String[0]);
-		}
+		// how???
+//		for (Path lib : miscGameLibraries) {
+//			launcher.addToClassPath(lib);
+//			launcher.getKnotClassLoaderDelegate().addCodeSource(lib);
+//			launcher.getKnotClassLoaderDelegate().setAllowedPrefixes(lib, new String[0]);
+//		}
 	}
 
 	@Override

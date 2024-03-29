@@ -13,7 +13,7 @@ plugins {
 	id 'java-library'
 	id 'eclipse'
 	id 'maven-publish'
-	id 'checkstyle'
+//	id 'checkstyle'
 	id 'com.diffplug.spotless' version "6.22.0"
 	id 'fabric-loom' version '1.4-SNAPSHOT' apply false
 	id 'com.github.johnrengelman.shadow' version '8.1.1'
@@ -179,9 +179,63 @@ task getSat4jAbout(type: Copy) {
 	into layout.buildDirectory.dir("sat4j")
 }
 
+tasks.getByName("build").dependsOn("distZip")
+
+task copyLibraries(type: Copy){
+	dependsOn "fatJar"
+	delete(layout.buildDirectory.dir("packed"))
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	layout.buildDirectory.dir("libs/").collect {
+		def files = it.get().asFileTree.files
+		for (final def f in files) {
+			if (f.name.contains "fat"){
+				from f.toPath().toAbsolutePath().toString()
+			}
+		}
+	}
+	configurations.runtimeClasspath.each {
+		from it.toPath().toAbsolutePath().toString()
+	}
+
+	into layout.buildDirectory.dir("packed/libs")
+}
+
+def startBatContent = [
+	"@echo off",
+	"@rem Set your velocity jar name into system property fabric.systemLibraryExclusion",
+	"java \"-Dfabric.systemLibraryExclusion=velocity-3.3.0-SNAPSHOT-371.jar\" \"-Dfabric.debug.disableClassPathIsolation\" -cp \"./libs/*\" net.fabricmc.loader.impl.launch.knot.KnotServer\n",
+	"pause"
+]
+
+def startShContent = [
+	"#!/bin/sh",
+	"java \"-Dfabric.systemLibraryExclusion=velocity-3.3.0-SNAPSHOT-371.jar\" \"-Dfabric.debug.disableClassPathIsolation\" -cp \"./libs/*\" net.fabricmc.loader.impl.launch.knot.KnotServer\n"
+]
+
+tasks.register("generateStartScript"){
+	dependsOn "copyLibraries"
+	doLast {
+		def startBat = layout.buildDirectory.dir("packed").get().file("start.bat")
+		def startShellScript = layout.buildDirectory.dir("packed").get().file("start.sh")
+		startBat.asFile.write(startBatContent.join("\n"))
+		startShellScript.asFile.write(startShContent.join("\n"))
+		copy {
+			from layout.projectDirectory.file("README.md")
+			into layout.buildDirectory.dir("packed")
+		}
+	}
+}
+
+task distZip(type: Zip){
+	dependsOn "generateStartScript"
+	archiveBaseName = "${project.name}-${project.version}-packed"
+	destinationDirectory = layout.buildDirectory.dir("dist")
+	from layout.buildDirectory.dir("packed")
+}
+
 task fatJar(type: ShadowJar, dependsOn: getSat4jAbout) {
 	from sourceSets.main.output
-	from project(":minecraft").sourceSets.main.output
+	from project(":velocity").sourceSets.main.output
 	from getSat4jAbout.destinationDir
 	from("LICENSE") {
 		rename { "${it}_${project.base.archivesName.get()}"}
@@ -220,7 +274,7 @@ File proguardFile = file("build/libs/fabric-loader-${version}.jar")
 
 import proguard.gradle.ProGuardTask
 task proguardJar(type: ProGuardTask, dependsOn: fatJar) {
-	def classpath = project(":minecraft").configurations.compileClasspath
+	def classpath = project(":velocity").configurations.compileClasspath
 
 	inputs.files(fatJar, classpath)
 	outputs.files(proguardFile)
@@ -246,7 +300,7 @@ tasks.withType(AbstractArchiveTask) {
 
 sourcesJar {
 	from sourceSets.main.allSource
-	from project(":minecraft").sourceSets.main.allSource
+	from project(":velocity").sourceSets.main.allSource
 }
 
 // useful for creating test mod jar
@@ -317,10 +371,10 @@ task javadocJar(type: Jar) {
 build.dependsOn javadocJar
 
 allprojects {
-	checkstyle {
-		configFile = project.rootProject.file("checkstyle.xml")
-		toolVersion = '8.44'
-	}
+//	checkstyle {
+//		configFile = project.rootProject.file("checkstyle.xml")
+//		toolVersion = '8.44'
+//	}
 
 	spotless {
 		java {

@@ -9,15 +9,8 @@ pluginManagement {
 }
 rootProject.name='fabric-loader'
 
-include "minecraft"
 include "velocity"
 include "junit"
-
-if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
-	include "minecraft:minecraft-test"
-} else {
-	println("Minecraft test sub project requires java 17 or higher!")
-}
 
 if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
 	include "velocity:velocity-test"
