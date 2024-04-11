@@ -432,13 +432,22 @@ publishing {
 
 	// select the repositories you want to publish to
 	repositories {
-		if (ENV.MAVEN_URL) {
-			maven {
-				url ENV.MAVEN_URL
-				credentials {
-					username ENV.MAVEN_USERNAME
-					password ENV.MAVEN_PASSWORD
-				}
+//		if (ENV.MAVEN_URL) {
+//			maven {
+//				name "RemoteMaven"
+//				url ENV.MAVEN_URL
+//				credentials {
+//					username ENV.MAVEN_USERNAME
+//					password ENV.MAVEN_PASSWORD
+//				}
+//			}
+//		}
+		maven {
+			name = "NekoMavenRelease"
+			url = uri("https://maven.takeneko.icu/releases")
+			credentials {
+				username = project.findProperty("nekomaven.user") as String ?: System.getenv("NEKO_USERNAME")
+				password = project.findProperty("nekomaven.password") as String ?: System.getenv("NEKO_TOKEN")
 			}
 		}
 	}
